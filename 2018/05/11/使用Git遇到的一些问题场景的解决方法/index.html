@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  
+  
+  <title>  使用Git遇到的一些问题场景的解决方法 |   Blog </title>
+
+ 
+  
+    <link rel="icon" href="/images/favicon.png">
+  
+
+
+  <link rel="stylesheet" href="/nayo.min.css"> 
+</head>  
+  <body>   
+    
+      <header class="header">
+	
+  <nav class="header-nav">        
+   
+    <span class="iconfont icon-menu mobile-toggle"></span>   	
+
+    <a class="header-logo" href="/">Blog</a>  
+
+    <div class="header-menu">          
+              
+            
+
+              <a class="header-menu-link" id="header-menu-home" href="/">Home</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-archives" href="/archives">Archives</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-tags" href="/tags">Tags</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-about" href="/about">About</a>     
+
+            
+            
+            
+
+              <a class="iconfont icon-menu-search header-menu-link" id="header-menu-search"></a>
+
+            
+                
+    </div>  
+    
+  </nav>
+</header>   
+
+      <div class="container">       
+          
+          
+            <section class="main">  
+          
+
+          <article class="post">
+  
+	<div class="post-header">
+
+	<p class="post-title">	
+		使用Git遇到的一些问题场景的解决方法
+	</p>
+			
+
+	<div class="meta-info">	
+	<span>
+		May 11, 2018
+	</span>
+
+	
+	
+		<i class="iconfont icon-words"></i>
+		<span>
+			1712
+		</span>
+	
+</div>
+
+</div> 
+	 
+
+	  <div class="post-content slideDownMin">
+
+		
+
+			
+					<p>刚毕业开始使用git到现在也有近一年的时间，在提交代码时也碰到了很多问题，这里总结下使用到git的一些基本命令，与遇到的一些问题场景的解决方法。</p>
+<ul>
+<li><p>配置Git的用户名与邮箱地址</p>
+<pre><code>git config --global user.name yujie.cai
+git config --global user.email yujie.cai@hpe.com
+</code></pre></li>
+<li><p>查看所有配置</p>
+<pre><code>git config --list
+</code></pre></li>
+<li><p>Clone远程仓库代码</p>
+<pre><code>git clone &lt;address.git&gt;
+</code></pre></li>
+<li><p>想修改远程仓库地址了</p>
+<pre><code>git remote set-url origin &lt;address.git&gt;
+</code></pre></li>
+<li><p>设置代理</p>
+<pre><code>git config --global http.proxy xxx.xxx.xxx.xxx
+</code></pre></li>
+</ul>
+<p>配置完了一些基本的参数了，准备开始上传自己的代码了</p>
+<ul>
+<li><p>查看文件状态</p>
+<pre><code>git status
+git status -uno / 只列出所有已经被git管理的且被修改但没提交的文件
+</code></pre></li>
+<li><p>文件的4种状态<br><strong>untracked</strong>： 新添加的文件或文件夹是untracked状态，意思是git的版本管理里没有这个文件。用git add &lt;文件名&gt; 将文件加入git管理后，文件是tracked下的staged状态。<strong>tracked</strong>：  包括unmodified，modified和staged三种状态。<br><strong>unmodified</strong>：没修改状态，与仓库里面的文件一致。<br><strong>modified</strong>：unmodified文件修改后，变为此状态，与仓库里不一致。<br><strong>staged</strong> ： modified文件git add后，变为此状态，暂存状态。git commit 后又变成modified状态。</p>
+</li>
+<li><p>提交代码一般步骤</p>
+<pre><code>git checkout  -b / 切一个新分支
+git pull / 拉最新代码
+git status -uno / 查看修改的文件状态
+git add &lt;filepath&gt;/把文件放到暂存区
+git commit -m&quot;Your message&quot;/ 提交代码到本地分支
+git push origin HEAD:refs/for/master (remote branch) / 提交代码到远程分支 例子里是gerrit的分支
+
+对于git add，其实直接commit也可以，可是为什么要设计这个暂存区？我觉得目的是方便把你的代码 分功能 分阶段 进行批量提交，目的就是更灵活的控制你想提交的代码。
+</code></pre></li>
+<li><p>如果想add所有很多文件怎么办</p>
+<pre><code>git add -A 保存所有的修改 
+git add . 保存新的添加和修改，但是不包括删除 
+git add -u 保存修改和删除，但是不包括新建文件。
+</code></pre></li>
+<li><p>如果add了错误的文件怎么办</p>
+<pre><code>git rm &lt;filepath&gt;
+</code></pre></li>
+<li><p>如果你commit了错误的文件怎么办</p>
+<pre><code>git log /先查看上次commit的change-id号
+git reset commit_id /回退到上一个 提交的节点 你这次修改的代码还在
+git reset –hard commit_id /回退到上一个commit节点， 这次修改的代码不在了，代码完全是上个节点的代码了
+</code></pre></li>
+<li><p>如果你commit后发现有文件漏了提交怎么办</p>
+<pre><code>git add &lt;你忘提交的文件&gt;
+git commit --am / 把这次提交与你上次提交合并成一个提交
+git push origin HEAD:refs/for/master / 搞定
+</code></pre></li>
+<li><p>如果不想让分支很难看，有很多merge commit怎么办</p>
+<pre><code>git pull --rebase
+</code></pre></li>
+<li><p>如果你在一个不是最新代码的branch上，开发了一段时间，不想切新branch也不覆盖掉你写的代码的情况下，把代码拉到最新怎么办</p>
+<pre><code>git statsh /保存当且代码的状态
+git pull / 拉最新代码
+git stash list /查看stash的记录
+git statsh pop statsh@{id} / 弹出 id 节点保存的状态，与当前代码合并
+</code></pre></li>
+<li><p>查看当前分支的历史提交记录的详细细节</p>
+<pre><code>gitk /弹出一个新界面，里面branch上所有提交的记录
+</code></pre></li>
+</ul>
+<p>这些差不多是到现在遇到的所有的关于使用git问题，如果你有不准确的，或者要补充的，一定要提出来噢。</p>
+  	
+					
+	  </div>     
+	  
+
+	
+<div class="post-meta">
+      	
+
+      	
+</div>
+
+
+
+
+
+<div class="post-footer">
+  <div class="pf-left">
+      <img class="pf-avatar lazyload" src="/images/placeholder.png" data-src="/images/header.jpg">
+      <p class="pf-des">hi,i am 9¾</p>
+  </div>
+
+  <div class="pf-right">           
+      <div class="pf-links">
+         
+        
+	
+<script id="-mob-share" src="http://f1.webshare.mob.com/code/mob-share.js?appkey=21d601593a1de"></script>
+	
+	<span class="share-btn">
+	<span class="iconfont icon-share"></span>
+	</span>
+
+
+	<div class="-mob-share sildeUpMin">
+		   			             
+            <a class="iconfont  icon-share-qq -mob-share-qq"></a>		
+     	   			             
+            <a class="iconfont  icon-share-weixin -mob-share-weixin"></a>		
+     	   			             
+            <a class="iconfont  icon-share-weibo -mob-share-weibo"></a>		
+     	   			             
+            <a class="iconfont  icon-share-douban -mob-share-douban"></a>		
+     	   			             
+            <a class="iconfont  icon-share-google -mob-share-google"></a>		
+     	   
+	</div>	
+
+      </div>  
+    <nav class="pf-paginator">
+           
+        
+      
+        
+        <a href="/2018/05/11/Spring中ajax与后台传输数据的几种方式/" data-hover="Spring中ajax与后台传输数据的几种方式"> Next</a>
+            
+  </nav>   
+  </div>
+</div> 
+	
+	
+</article>
+
+          </section> 
+      </div>            
+    
+    <a id="backTop">
+      <span>
+        <i class="iconfont icon-backtotop"></i>
+      </span>
+    </a> 
+
+  
+    
+
+        
+        <div class="search-container sildeUpMin">
+
+
+            <div class="search-header">
+            <input type="text" placeholder="Typing Something here." id="search-input" class="search-input">  
+            <span class="search-cancel iconfont icon-cancel"></span>
+          
+            </div>
+              
+            <div id="search-result" class="search-result"></div>
+
+        </div>
+ 
+
+     <div class="mobile-menu">      
+
+      
+      <img class="mobile-menu-icon lazyload" src="/images/placeholder.png" data-src="/images/favicon.png">   
+      
+
+         
+            
+
+            <a class="mobile-menu-link" href="/">Home
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/archives">Archives
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/tags">Tags
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/about">About
+            </a>
+            
+         
+                          
+
+            <a class="mobile-menu-link mobile-menu-search" href="#">Search </a>                 
+            
+         
+      
+</div>        
+    
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?636802045446222199ae541e32c8133e"; 
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+
+     
+    
+
+
+
+
+<footer id="footer">	    
+
+		
+		<div class="footer-copyright">
+		&copy;
+		
+		2018		
+	
+		Caiyujie
+		<br>
+
+		Built By Theme
+		<a href="https://github.com/Lemonreds/hexo-theme-Nayo" target="_blank">Nayo</a>	
+		</div>			
+	 
+</footer>   
+
+  
+
+    <script src="/nayo.bundle.js"></script>           
+  </body>        
+</html>

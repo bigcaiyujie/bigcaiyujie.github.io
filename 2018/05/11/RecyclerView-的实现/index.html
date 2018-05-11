@@ -1,0 +1,425 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  
+  
+  <title>  RecyclerView 的实现 |   Blog </title>
+
+ 
+  
+    <link rel="icon" href="/images/favicon.png">
+  
+
+
+  <link rel="stylesheet" href="/nayo.min.css"> 
+</head>  
+  <body>   
+    
+      <header class="header">
+	
+  <nav class="header-nav">        
+   
+    <span class="iconfont icon-menu mobile-toggle"></span>   	
+
+    <a class="header-logo" href="/">Blog</a>  
+
+    <div class="header-menu">          
+              
+            
+
+              <a class="header-menu-link" id="header-menu-home" href="/">Home</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-archives" href="/archives">Archives</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-tags" href="/tags">Tags</a>     
+
+            
+            
+            
+
+              <a class="header-menu-link" id="header-menu-about" href="/about">About</a>     
+
+            
+            
+            
+
+              <a class="iconfont icon-menu-search header-menu-link" id="header-menu-search"></a>
+
+            
+                
+    </div>  
+    
+  </nav>
+</header>   
+
+      <div class="container">       
+          
+          
+            <section class="main">  
+          
+
+          <article class="post">
+  
+	<div class="post-header">
+
+	<p class="post-title">	
+		RecyclerView 的实现
+	</p>
+			
+
+	<div class="meta-info">	
+	<span>
+		May 11, 2018
+	</span>
+
+	
+	
+		<i class="iconfont icon-words"></i>
+		<span>
+			4889
+		</span>
+	
+</div>
+
+</div> 
+	 
+
+	  <div class="post-content slideDownMin">
+
+		
+
+			
+					<h4 id="先说使用RecyclerView要实现的必要步骤："><a href="#先说使用RecyclerView要实现的必要步骤：" class="headerlink" title="先说使用RecyclerView要实现的必要步骤："></a>先说使用RecyclerView要实现的必要步骤：</h4><p>1.用<strong>LayoutManager</strong>管理它的布局：横向或竖向，不同的布局风格；<br>2.实现Adapter类继承<strong>RecyclerView.Adapter</strong>类；<br>3.<strong>RecyclerView.addItemDecoration</strong>(newDividerItemDecoration()):<br>制作item之间的分割线；<br>4.<strong>RecyclerView.setItemAnimator</strong>（new MyItemAnimator()）:制作删除添加item等操作的动画效果；<br>5.实现RecyclerView的<strong>事件监听器</strong>：点击，长按等</p>
+<pre><code> mRecyclerView = findView(R.id.id_recyclerview);
+//设置布局管理器
+mRecyclerView.setLayoutManager(layout);
+//设置adapter
+mRecyclerView.setAdapter(adapter)
+//设置Item增加、移除动画
+mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+//添加分割线
+mRecyclerView.addItemDecoration(new DividerItemDecoration(
+            getActivity(), DividerItemDecoration.HORIZONTAL_LIST));
+</code></pre><h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>使用RecyclerView之前我们要导入相对应的包：  </p>
+<pre><code>compile &apos;com.android.support:recyclerview-v7:+&apos;
+</code></pre><p>布局文件：主布局</p>
+<pre><code>&lt;android.support.v7.widget.RecyclerView
+   android:id=&quot;@+id/recyclerview&quot;
+   android:layout_width=&quot;match_parent&quot;
+   android:layout_height=&quot;match_parent&quot;/&gt;  
+</code></pre><p>item子布局：</p>
+<pre><code>&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+android:layout_width=&quot;match_parent&quot;
+android:background=&quot;@drawable/item_bg&quot;
+android:layout_margin=&quot;3dp&quot;
+android:layout_height=&quot;72dp&quot;&gt;    
+&lt;TextView
+    android:layout_width=&quot;72dp&quot;
+    android:layout_height=&quot;match_parent&quot;
+    android:id=&quot;@+id/Item_text&quot;
+    android:gravity=&quot;center&quot; /&gt;
+</code></pre><p></p>
+<h2 id="一-设置它的布局管理："><a href="#一-设置它的布局管理：" class="headerlink" title="一.设置它的布局管理："></a>一.设置它的布局管理：</h2><pre><code>LinearLayoutManager linearLayoutManager  = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);        
+recyclerView.setLayoutManager(linearLayoutManager);
+</code></pre><h4 id="三个布局：直接上源代码"><a href="#三个布局：直接上源代码" class="headerlink" title="三个布局：直接上源代码"></a>三个布局：直接上源代码</h4><p>1 .<strong>线性布局</strong>：</p>
+<pre><code>  /**  * @param context       Current context, will be used to access resources.
+ * @param orientation   Layout orientation. Should be {@link #HORIZONTAL} or{@link#VERTICAL}.
+ * @param reverseLayout When set to true, layouts from end to start.
+ */
+public LinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    mAnchorInfo = new AnchorInfo();
+    setOrientation(orientation);
+    setReverseLayout(reverseLayout);
+}
+</code></pre><p>2.<strong>格子布局</strong>：</p>
+<pre><code>  /** * @param context Current context, will be used to access resources.
+ * @param spanCount The number of columns or rows in the grid
+ * @param orientation Layout orientation. Should be {@link #HORIZONTAL} or {@link
+ *                      #VERTICAL}.
+ * @param reverseLayout When set to true, layouts from end to start.
+ */
+public GridLayoutManager(Context context, int spanCount, int orientation,
+        boolean reverseLayout) {
+    super(context, orientation, reverseLayout);
+    setSpanCount(spanCount);
+}
+</code></pre><p>3.<strong>瀑布流布局</strong>：</p>
+<pre><code> /**  * Creates a StaggeredGridLayoutManager with given parameters.
+ *
+ * @param spanCount   If orientation is vertical, spanCount is number of columns. If
+ *                    orientation is horizontal, spanCount is number of rows.
+ * @param orientation {@link #VERTICAL} or {@link #HORIZONTAL}
+ */
+public StaggeredGridLayoutManager(int spanCount, int orientation) {
+    mOrientation = orientation;
+    setSpanCount(spanCount);
+}
+</code></pre><h2 id="二-创建适配器"><a href="#二-创建适配器" class="headerlink" title="二.创建适配器"></a>二.创建适配器</h2><pre><code>public class MyRecyclerViewAdatper extends RecyclerView.Adapter&lt;RecyclerView.ViewHolder&gt;  {
+  private LayoutInflater inflater;
+  private Context context;
+  private List&lt;String&gt; datas;
+private OnitemClickListener onitemClickListener;
+
+public  interface  OnitemClickListener{
+    void onItemClick(View view,int positon);
+    void onItemLongClick(View view,int position);
+}
+
+public void setOntermClickListener(OnitemClickListener ontermClickListener){
+    this.onitemClickListener = ontermClickListener;
+}
+   public MyAdapter(Context context,List&lt;String&gt; datas){
+    this.context = context;
+    this.datas = datas;
+    inflater = LayoutInflater.from(context);
+
+}
+@Override
+public long getItemId(int position) {//返回数据的id
+    return super.getItemId(position);
+}
+
+@Override
+public int getItemCount() { //返回数据的数量
+    return datas.size();
+}
+
+@Override
+public int getItemViewType(int position) { //放回item的类型（制定不同风格的item要用到）
+    return position;
+}
+
+@Override
+public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+ //这个函数是初始化视图，返回一个ViewHolder，方法是把View直接封装在ViewHolder中，然后我们面向的是ViewHolder这个实例
+    View view  = inflater.inflate(R.layout.item,parent,false);
+    MyViewHolder myViewHolder = new MyViewHolder(view);
+    return myViewHolder;
+}
+
+@Override
+public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+      //对视图的操作主要放在这里
+      holder.textView.setText(datas.get(position));
+   if(onitemClickListener!=null){
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onitemClickListener.onItemClick(holder.itemView, position);
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onitemClickListener.onItemLongClick(holder.itemView, position);
+                return false;
+            }
+        });
+    }
+}
+ public void addData(int pos){
+    datas.add(pos,&quot;Insert one&quot;);
+    notifyItemInserted(pos);
+}
+
+public void deletData(int pos){
+    datas.remove(pos);
+    notifyItemRemoved(pos);
+}
+  //就是一个持有者的类，他里面一般没有方法，只有属性，作用就是一个临时的储存器，
+  //把你getView方法中每次返回的View存起来，可以下次再用。这样做的好处就是不必每次都到布局文件中去拿到你的View，提高了效率。
+class MyViewHolder extends RecyclerView.ViewHolder{
+TextView textView;
+public MyViewHolder(View itemView) {
+    super(itemView);
+    textView = (TextView)itemView.findViewById(R.id.Item_text);
+}
+}
+</code></pre><h4 id="说明："><a href="#说明：" class="headerlink" title="说明："></a>说明：</h4><pre><code>notifyItemInserted(pos);//增加item  
+notifyItemRemoved(pos);//删除item
+</code></pre>  	
+					
+	  </div>     
+	  
+
+	
+<div class="post-meta">
+      	
+
+      	
+</div>
+
+
+
+
+
+<div class="post-footer">
+  <div class="pf-left">
+      <img class="pf-avatar lazyload" src="/images/placeholder.png" data-src="/images/header.jpg">
+      <p class="pf-des">hi,i am 9¾</p>
+  </div>
+
+  <div class="pf-right">           
+      <div class="pf-links">
+         
+        
+	
+<script id="-mob-share" src="http://f1.webshare.mob.com/code/mob-share.js?appkey=21d601593a1de"></script>
+	
+	<span class="share-btn">
+	<span class="iconfont icon-share"></span>
+	</span>
+
+
+	<div class="-mob-share sildeUpMin">
+		   			             
+            <a class="iconfont  icon-share-qq -mob-share-qq"></a>		
+     	   			             
+            <a class="iconfont  icon-share-weixin -mob-share-weixin"></a>		
+     	   			             
+            <a class="iconfont  icon-share-weibo -mob-share-weibo"></a>		
+     	   			             
+            <a class="iconfont  icon-share-douban -mob-share-douban"></a>		
+     	   			             
+            <a class="iconfont  icon-share-google -mob-share-google"></a>		
+     	   
+	</div>	
+
+      </div>  
+    <nav class="pf-paginator">
+      
+         
+          <a href="/2018/05/11/Spring中ajax与后台传输数据的几种方式/" data-hover="Spring中ajax与后台传输数据的几种方式">Prev</a>      
+            
+        
+      
+        
+        <a href="/2018/05/11/hello-world/" data-hover="Hello World"> Next</a>
+            
+  </nav>   
+  </div>
+</div> 
+	
+	
+</article>
+
+          </section> 
+      </div>            
+    
+    <a id="backTop">
+      <span>
+        <i class="iconfont icon-backtotop"></i>
+      </span>
+    </a> 
+
+  
+    
+
+        
+        <div class="search-container sildeUpMin">
+
+
+            <div class="search-header">
+            <input type="text" placeholder="Typing Something here." id="search-input" class="search-input">  
+            <span class="search-cancel iconfont icon-cancel"></span>
+          
+            </div>
+              
+            <div id="search-result" class="search-result"></div>
+
+        </div>
+ 
+
+     <div class="mobile-menu">      
+
+      
+      <img class="mobile-menu-icon lazyload" src="/images/placeholder.png" data-src="/images/favicon.png">   
+      
+
+         
+            
+
+            <a class="mobile-menu-link" href="/">Home
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/archives">Archives
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/tags">Tags
+            </a>
+            
+         
+            
+
+            <a class="mobile-menu-link" href="/about">About
+            </a>
+            
+         
+                          
+
+            <a class="mobile-menu-link mobile-menu-search" href="#">Search </a>                 
+            
+         
+      
+</div>        
+    
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?636802045446222199ae541e32c8133e"; 
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+
+     
+    
+
+
+
+
+<footer id="footer">	    
+
+		
+		<div class="footer-copyright">
+		&copy;
+		
+		2018		
+	
+		Caiyujie
+		<br>
+
+		Built By Theme
+		<a href="https://github.com/Lemonreds/hexo-theme-Nayo" target="_blank">Nayo</a>	
+		</div>			
+	 
+</footer>   
+
+  
+
+    <script src="/nayo.bundle.js"></script>           
+  </body>        
+</html>

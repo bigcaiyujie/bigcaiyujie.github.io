@@ -29,25 +29,25 @@
               
             
 
-              <a class="header-menu-link" id="header-menu-home" href="/">首页</a>     
+              <a class="header-menu-link" id="header-menu-home" href="/">Home</a>     
 
             
             
             
 
-              <a class="header-menu-link" id="header-menu-archives" href="/archives">归档</a>     
+              <a class="header-menu-link" id="header-menu-archives" href="/archives">Archives</a>     
 
             
             
             
 
-              <a class="header-menu-link" id="header-menu-tags" href="/tags">标签</a>     
+              <a class="header-menu-link" id="header-menu-tags" href="/tags">Tags</a>     
 
             
             
             
 
-              <a class="header-menu-link" id="header-menu-about" href="/about">关于</a>     
+              <a class="header-menu-link" id="header-menu-about" href="/about">About</a>     
 
             
             
@@ -97,7 +97,7 @@
 	   
 	<div class="article-header">
 	    
-	     <a class="article-title" href="/2018/05/11/test-my-site/">test_my_site</a>  
+	     <a class="article-title" href="/2018/05/11/使用Git遇到的一些问题场景的解决方法/">使用Git遇到的一些问题场景的解决方法</a>  
 	       
 		 
 
@@ -116,12 +116,421 @@
     
 	<div class="article-excerpt">	
 		 
-			
+			<p>刚毕业开始使用git到现在也有近一年的时间，在提交代码时也碰到了很多问题，这里总结下使用到git的一些基本命令，与遇到的一些问题场景的解决方法。</p>
+<ul>
+<li><p>配置Git的用户名与邮箱地址</p>
+<pre><code>git config --global user.name yujie.cai
+git config --global user.email yujie.cai@hpe.com
+</code></pre></li>
+<li><p>查看所有配置</p>
+<pre><code>git config --list
+</code></pre></li>
+<li><p>Clone远程仓库代码</p>
+<pre><code>git clone &lt;address.git&gt;
+</code></pre></li>
+<li><p>想修改远程仓库地址了</p>
+<pre><code>git remote set-url origin &lt;address.git&gt;
+</code></pre></li>
+<li><p>设置代理</p>
+<pre><code>git config --global http.proxy xxx.xxx.xxx.xxx
+</code></pre></li>
+</ul>
+<p>配置完了一些基本的参数了，准备开始上传自己的代码了</p>
+<ul>
+<li><p>查看文件状态</p>
+<pre><code>git status
+git status -uno / 只列出所有已经被git管理的且被修改但没提交的文件
+</code></pre></li>
+<li><p>文件的4种状态<br><strong>untracked</strong>： 新添加的文件或文件夹是untracked状态，意思是git的版本管理里没有这个文件。用git add &lt;文件名&gt; 将文件加入git管理后，文件是tracked下的staged状态。<strong>tracked</strong>：  包括unmodified，modified和staged三种状态。<br><strong>unmodified</strong>：没修改状态，与仓库里面的文件一致。<br><strong>modified</strong>：unmodified文件修改后，变为此状态，与仓库里不一致。<br><strong>staged</strong> ： modified文件git add后，变为此状态，暂存状态。git commit 后又变成modified状态。</p>
+</li>
+<li><p>提交代码一般步骤</p>
+<pre><code>git checkout  -b / 切一个新分支
+git pull / 拉最新代码
+git status -uno / 查看修改的文件状态
+git add &lt;filepath&gt;/把文件放到暂存区
+git commit -m&quot;Your message&quot;/ 提交代码到本地分支
+git push origin HEAD:refs/for/master (remote branch) / 提交代码到远程分支 例子里是gerrit的分支
+
+对于git add，其实直接commit也可以，可是为什么要设计这个暂存区？我觉得目的是方便把你的代码 分功能 分阶段 进行批量提交，目的就是更灵活的控制你想提交的代码。
+</code></pre></li>
+<li><p>如果想add所有很多文件怎么办</p>
+<pre><code>git add -A 保存所有的修改 
+git add . 保存新的添加和修改，但是不包括删除 
+git add -u 保存修改和删除，但是不包括新建文件。
+</code></pre></li>
+<li><p>如果add了错误的文件怎么办</p>
+<pre><code>git rm &lt;filepath&gt;
+</code></pre></li>
+<li><p>如果你commit了错误的文件怎么办</p>
+<pre><code>git log /先查看上次commit的change-id号
+git reset commit_id /回退到上一个 提交的节点 你这次修改的代码还在
+git reset –hard commit_id /回退到上一个commit节点， 这次修改的代码不在了，代码完全是上个节点的代码了
+</code></pre></li>
+<li><p>如果你commit后发现有文件漏了提交怎么办</p>
+<pre><code>git add &lt;你忘提交的文件&gt;
+git commit --am / 把这次提交与你上次提交合并成一个提交
+git push origin HEAD:refs/for/master / 搞定
+</code></pre></li>
+<li><p>如果不想让分支很难看，有很多merge commit怎么办</p>
+<pre><code>git pull --rebase
+</code></pre></li>
+<li><p>如果你在一个不是最新代码的branch上，开发了一段时间，不想切新branch也不覆盖掉你写的代码的情况下，把代码拉到最新怎么办</p>
+<pre><code>git statsh /保存当且代码的状态
+git pull / 拉最新代码
+git stash list /查看stash的记录
+git statsh pop statsh@{id} / 弹出 id 节点保存的状态，与当前代码合并
+</code></pre></li>
+<li><p>查看当前分支的历史提交记录的详细细节</p>
+<pre><code>gitk /弹出一个新界面，里面branch上所有提交的记录
+</code></pre></li>
+</ul>
+<p>这些差不多是到现在遇到的所有的关于使用git问题，如果你有不准确的，或者要补充的，一定要提出来噢。</p>
+
 		  	  
 	</div>
 
 	<div class="article-bottom">
-		<a class="article-readmore" href="/2018/05/11/test-my-site/">阅读更多</a> 	</div>	
+		<a class="article-readmore" href="/2018/05/11/使用Git遇到的一些问题场景的解决方法/">Continue</a> 	</div>	
+    
+</article>     
+     	
+      	  	
+
+  		
+    	<article class="article">		
+	   
+	<div class="article-header">
+	    
+	     <a class="article-title" href="/2018/05/11/Spring中ajax与后台传输数据的几种方式/">Spring中ajax与后台传输数据的几种方式</a>  
+	       
+		 
+
+		<div class="article-meta">
+		
+		May 11, 2018
+
+		
+			<span class="iconfont icon-star"></span>		 
+			            
+			<a class="article-tag" href="/tags/java/">java</a>           
+			            
+			<a class="article-tag" href="/tags/ajax/">ajax</a>           
+			
+		
+		</div>
+
+	</div>
+
+
+	
+
+    
+	<div class="article-excerpt">	
+		 
+			<p>最近写ajax与后台传输数据的时候碰到了一个问题，我想ajax以json的方式把数据传输个后台，后台用map的形式接收，然后也以map的形式传回数据。可是一直碰到前台报（*）（@415 Unsupported media type) 不支持媒体类型错误，然后经过查阅资料终于解决了。这里总结下关于ajax与后台传输数据的几种方式，上面问题的解决方法在本文最后。</p>
+<hr>
+<h6 id="1-把数据放到url中传递"><a href="#1-把数据放到url中传递" class="headerlink" title="1.把数据放到url中传递"></a>1.把数据放到url中传递</h6><h6 id="js："><a href="#js：" class="headerlink" title="js："></a>js：</h6><p><code><br>var id = $(“#id”).val();<br>$.ajax({<br>        type: “POST”,<br>        url: “/IFTree/people/getPeopleById/“+id,//参数放在url中<br>        success:function(data){ alert(data);<br>        },<br>        error:function(xhr, textStatus, errorThrown) {<br>        }<br>        });<br></code></p>
+<h6 id="后台："><a href="#后台：" class="headerlink" title="后台："></a>后台：</h6><p><pre><code></code></pre></p>
+<pre><code>@RequestMapping(value = &quot;getPeopleById/{id}&quot;)
+@ResponseBody
+    public Map&lt;String, Object&gt; getPeopleById(@PathVariable(&quot;id&quot;) int id) {
+        //@PathVariable(&quot;id&quot;) 如果参数名与url定义的一样注解可以不用定义(&quot;id&quot;)
+        System.out.println(id);
+        Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();
+        return map;
+    }
+}
+</code></pre><p></p>
+<h6 id="2-把数据放到data中"><a href="#2-把数据放到data中" class="headerlink" title="2.把数据放到data中"></a>2.把数据放到data中</h6><h6 id="js：-1"><a href="#js：-1" class="headerlink" title="js："></a>js：</h6><p><code><br>    var id = $(“#id”).val();<br>        $.ajax({<br>            type: “POST”,<br>            url: “/IFTree/people/getPeopleById”,<br>            data: {id:id},<br>            success:function(data){ alert(data.result);<br>            },<br>            error:function(xhr, textStatus, errorThrown) {<br>            }<br>        });<br></code></p>
+<h6 id="后台（两个方式）："><a href="#后台（两个方式）：" class="headerlink" title="后台（两个方式）："></a>后台（两个方式）：</h6><p><pre><code></code></pre></p>
+<pre><code>@RequestMapping(value = &quot;getPeopleById&quot;)
+@ResponseBody
+public Map&lt;String, Object&gt; getPeopleById(HttpServletRequest request,HttpServletResponse response) {
+    int id = Integer.valueOf(request.getParameter(&quot;id&quot;));
+    Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();
+    return map;
+}
+</code></pre><p></p>
+<hr>
+<pre><code>@RequestMapping(value = &quot;getPeopleById&quot;)
+@ResponseBody
+public Map&lt;String, Object&gt; getPeopleById(HttpServletRequest request,HttpServletResponse response) {
+    int id = Integer.valueOf(request.getParameter(&quot;id&quot;));
+    // 这里得到的都是字符串得转换成你需要的类型
+    Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();
+    return map;
+}
+</code></pre><p></p>
+<h6 id="3-以json传输（就是开头说的情况）"><a href="#3-以json传输（就是开头说的情况）" class="headerlink" title="3.以json传输（就是开头说的情况）"></a>3.以json传输（就是开头说的情况）</h6><h6 id="js（包含一些常见的ajax参数解释）："><a href="#js（包含一些常见的ajax参数解释）：" class="headerlink" title="js（包含一些常见的ajax参数解释）："></a>js（包含一些常见的ajax参数解释）：</h6><p><code><br>    var id = $(“#id”).val();<br>        $.ajax({<br>            type: “POST”,//请求类型<br>            timeout：10000,    //设置请求超时时间（毫秒）<br>            async:ture,//是否为异步请求<br>            cache:false,//是否从浏览器缓存中加载请求信息。<br>            url: “/IFTree/people/getPeopleById”,<br>            contentType: “application/json;charset=UTF-8”,//提交的数据类型<br>            data: JSON.stringify({id:id}),//这里是把json转化为字符串形式<br>            dataType: “json”,//返回的数据类型<br>            success:function(data){<br>                $(“#name”).val(data.result.name);<br>            },<br>            error:function(xhr, textStatus, errorThrown) {<br>            }<br>        });<br>    });<br></code></p>
+<h6 id="后台：-1"><a href="#后台：-1" class="headerlink" title="后台："></a>后台：</h6><p><pre><code></code></pre></p>
+<pre><code>@RequestMapping(value = &quot;getPeopleById&quot;, produces = &quot;application/json&quot;)
+@ResponseBody
+public Map&lt;String, Object&gt; getPeopleById(@RequestBody Map&lt;String, Object&gt; body){
+    System.out.println(&quot;&quot;+body.get(&quot;id&quot;));
+    People people = peopleService.getPeopleById(Integer.valueOf((String)body.get(&quot;id&quot;)));
+    Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();
+    map.put(&quot;result&quot;, people);
+    return map;
+}
+</code></pre><p></p>
+<h6 id="详解："><a href="#详解：" class="headerlink" title="详解："></a>详解：</h6><p>@RequestBody<br>该注解首先读取request请求的正文数据，然后使用默认配置的HttpMessageConverter进行解析，把数据绑定要对象上面，然后再把对象绑定到controllor中的参数上。<br>@ResponseBody<br>      该注解也是一样的用于将Controller的方法返回的对象，通过的HttpMessageConverter转换为指定格式后，写入到Response对象的body数据区。</p>
+<h6 id="Srping-mvc-xml-配置转换器"><a href="#Srping-mvc-xml-配置转换器" class="headerlink" title="Srping mvc .xml(配置转换器)"></a>Srping mvc .xml(配置转换器)</h6><p><code></code></p>
+<pre><code> &lt;!-- spring MVC提供的适配器 spring默认加载 (如果不修改默认加载的4类转换器，该bean可不配置)--&gt;
+ &lt;bean class=&quot;org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter&quot;&gt;
+    &lt;property name=&quot;messageConverters&quot;&gt;
+        &lt;!-- 该适配器默认加载以下4类转换器--&gt;
+        &lt;list&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.BufferedImageHttpMessageConverter&quot; /&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.ByteArrayHttpMessageConverter&quot; /&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.xml.SourceHttpMessageConverter&quot; /&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.xml.XmlAwareFormHttpMessageConverter&quot; /&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.StringHttpMessageConverter&quot; /&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.json.MappingJacksonHttpMessageConverter&quot;&gt;
+                &lt;property name=&quot;supportedMediaTypes&quot;&gt;
+                    &lt;list&gt;
+                        &lt;value&gt;application/json;charset=UTF-8&lt;/value&gt;
+                    &lt;/list&gt;
+                &lt;/property&gt;
+            &lt;/bean&gt;&lt;!--这里配置了json转换器支持的媒体类型--&gt;
+        &lt;/list&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;    
+</code></pre><p><br><strong>ByteArrayHttpMessageConverter</strong>: 负责读取二进制格式的数据和写出二进制格式的数据；<br><strong>StringHttpMessageConverter</strong>：   负责读取字符串格式的数据和写出二进制格式的数据；<br><strong>ResourceHttpMessageConverter</strong>：负责读取资源文件和写出资源文件数据；<br><strong>FormHttpMessageConverter</strong>：       负责读取form提交的数据<br><strong>MappingJacksonHttpMessageConverter</strong>:  负责读取和写入json格式的数据；<br><strong>SouceHttpMessageConverter</strong>：                   负责读取和写入 xml 中javax.xml.transform.Source定义的数据；<br><strong>Jaxb2RootElementHttpMessageConverter</strong>:  负责读取和写入xml 标签格式的数据；<br><strong>AtomFeedHttpMessageConverter</strong>:              负责读取和写入Atom格式的数据；<br><strong>RssChannelHttpMessageConverter</strong>:           负责读取和写入RSS格式的数据；</p>
+<p>项目里面我用到的只有json转换器，所以要导入关于json的包（maven）:<br><code><br> <dependency><br>            <groupid>org.codehaus.jackson</groupid><br>            <artifactid>jackson-core-asl</artifactid><br>            <version>1.9.11</version><br>        </dependency><br>          <dependency><br>            <groupid>org.codehaus.jackson</groupid><br>            <artifactid>jackson-mapper-asl</artifactid><br>            <version>1.9.11</version><br>        </dependency><br></code></p>
+<p>同样controller中参数也能以实体类的方式接收数据，<br>开始一直报（415 Unsupported media type）的错误是因为配置文件没有写对也没导入相应的包。<br>如果有哪里不足或错误的地方望提出，谢谢^_^</p>
+
+		  	  
+	</div>
+
+	<div class="article-bottom">
+		<a class="article-readmore" href="/2018/05/11/Spring中ajax与后台传输数据的几种方式/">Continue</a> 	</div>	
+    
+</article>     
+     	
+      	  	
+
+  		
+    	<article class="article">		
+	   
+	<div class="article-header">
+	    
+	     <a class="article-title" href="/2018/05/11/RecyclerView-的实现/">RecyclerView 的实现</a>  
+	       
+		 
+
+		<div class="article-meta">
+		
+		May 11, 2018
+
+		
+		</div>
+
+	</div>
+
+
+	
+
+    
+	<div class="article-excerpt">	
+		 
+			<h4 id="先说使用RecyclerView要实现的必要步骤："><a href="#先说使用RecyclerView要实现的必要步骤：" class="headerlink" title="先说使用RecyclerView要实现的必要步骤："></a>先说使用RecyclerView要实现的必要步骤：</h4><p>1.用<strong>LayoutManager</strong>管理它的布局：横向或竖向，不同的布局风格；<br>2.实现Adapter类继承<strong>RecyclerView.Adapter</strong>类；<br>3.<strong>RecyclerView.addItemDecoration</strong>(newDividerItemDecoration()):<br>制作item之间的分割线；<br>4.<strong>RecyclerView.setItemAnimator</strong>（new MyItemAnimator()）:制作删除添加item等操作的动画效果；<br>5.实现RecyclerView的<strong>事件监听器</strong>：点击，长按等</p>
+<pre><code> mRecyclerView = findView(R.id.id_recyclerview);
+//设置布局管理器
+mRecyclerView.setLayoutManager(layout);
+//设置adapter
+mRecyclerView.setAdapter(adapter)
+//设置Item增加、移除动画
+mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+//添加分割线
+mRecyclerView.addItemDecoration(new DividerItemDecoration(
+            getActivity(), DividerItemDecoration.HORIZONTAL_LIST));
+</code></pre><h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>使用RecyclerView之前我们要导入相对应的包：  </p>
+<pre><code>compile &apos;com.android.support:recyclerview-v7:+&apos;
+</code></pre><p>布局文件：主布局</p>
+<pre><code>&lt;android.support.v7.widget.RecyclerView
+   android:id=&quot;@+id/recyclerview&quot;
+   android:layout_width=&quot;match_parent&quot;
+   android:layout_height=&quot;match_parent&quot;/&gt;  
+</code></pre><p>item子布局：</p>
+<pre><code>&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+android:layout_width=&quot;match_parent&quot;
+android:background=&quot;@drawable/item_bg&quot;
+android:layout_margin=&quot;3dp&quot;
+android:layout_height=&quot;72dp&quot;&gt;    
+&lt;TextView
+    android:layout_width=&quot;72dp&quot;
+    android:layout_height=&quot;match_parent&quot;
+    android:id=&quot;@+id/Item_text&quot;
+    android:gravity=&quot;center&quot; /&gt;
+</code></pre><p></p>
+<h2 id="一-设置它的布局管理："><a href="#一-设置它的布局管理：" class="headerlink" title="一.设置它的布局管理："></a>一.设置它的布局管理：</h2><pre><code>LinearLayoutManager linearLayoutManager  = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);        
+recyclerView.setLayoutManager(linearLayoutManager);
+</code></pre><h4 id="三个布局：直接上源代码"><a href="#三个布局：直接上源代码" class="headerlink" title="三个布局：直接上源代码"></a>三个布局：直接上源代码</h4><p>1 .<strong>线性布局</strong>：</p>
+<pre><code>  /**  * @param context       Current context, will be used to access resources.
+ * @param orientation   Layout orientation. Should be {@link #HORIZONTAL} or{@link#VERTICAL}.
+ * @param reverseLayout When set to true, layouts from end to start.
+ */
+public LinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    mAnchorInfo = new AnchorInfo();
+    setOrientation(orientation);
+    setReverseLayout(reverseLayout);
+}
+</code></pre><p>2.<strong>格子布局</strong>：</p>
+<pre><code>  /** * @param context Current context, will be used to access resources.
+ * @param spanCount The number of columns or rows in the grid
+ * @param orientation Layout orientation. Should be {@link #HORIZONTAL} or {@link
+ *                      #VERTICAL}.
+ * @param reverseLayout When set to true, layouts from end to start.
+ */
+public GridLayoutManager(Context context, int spanCount, int orientation,
+        boolean reverseLayout) {
+    super(context, orientation, reverseLayout);
+    setSpanCount(spanCount);
+}
+</code></pre><p>3.<strong>瀑布流布局</strong>：</p>
+<pre><code> /**  * Creates a StaggeredGridLayoutManager with given parameters.
+ *
+ * @param spanCount   If orientation is vertical, spanCount is number of columns. If
+ *                    orientation is horizontal, spanCount is number of rows.
+ * @param orientation {@link #VERTICAL} or {@link #HORIZONTAL}
+ */
+public StaggeredGridLayoutManager(int spanCount, int orientation) {
+    mOrientation = orientation;
+    setSpanCount(spanCount);
+}
+</code></pre><h2 id="二-创建适配器"><a href="#二-创建适配器" class="headerlink" title="二.创建适配器"></a>二.创建适配器</h2><pre><code>public class MyRecyclerViewAdatper extends RecyclerView.Adapter&lt;RecyclerView.ViewHolder&gt;  {
+  private LayoutInflater inflater;
+  private Context context;
+  private List&lt;String&gt; datas;
+private OnitemClickListener onitemClickListener;
+
+public  interface  OnitemClickListener{
+    void onItemClick(View view,int positon);
+    void onItemLongClick(View view,int position);
+}
+
+public void setOntermClickListener(OnitemClickListener ontermClickListener){
+    this.onitemClickListener = ontermClickListener;
+}
+   public MyAdapter(Context context,List&lt;String&gt; datas){
+    this.context = context;
+    this.datas = datas;
+    inflater = LayoutInflater.from(context);
+
+}
+@Override
+public long getItemId(int position) {//返回数据的id
+    return super.getItemId(position);
+}
+
+@Override
+public int getItemCount() { //返回数据的数量
+    return datas.size();
+}
+
+@Override
+public int getItemViewType(int position) { //放回item的类型（制定不同风格的item要用到）
+    return position;
+}
+
+@Override
+public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+ //这个函数是初始化视图，返回一个ViewHolder，方法是把View直接封装在ViewHolder中，然后我们面向的是ViewHolder这个实例
+    View view  = inflater.inflate(R.layout.item,parent,false);
+    MyViewHolder myViewHolder = new MyViewHolder(view);
+    return myViewHolder;
+}
+
+@Override
+public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+      //对视图的操作主要放在这里
+      holder.textView.setText(datas.get(position));
+   if(onitemClickListener!=null){
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onitemClickListener.onItemClick(holder.itemView, position);
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onitemClickListener.onItemLongClick(holder.itemView, position);
+                return false;
+            }
+        });
+    }
+}
+ public void addData(int pos){
+    datas.add(pos,&quot;Insert one&quot;);
+    notifyItemInserted(pos);
+}
+
+public void deletData(int pos){
+    datas.remove(pos);
+    notifyItemRemoved(pos);
+}
+  //就是一个持有者的类，他里面一般没有方法，只有属性，作用就是一个临时的储存器，
+  //把你getView方法中每次返回的View存起来，可以下次再用。这样做的好处就是不必每次都到布局文件中去拿到你的View，提高了效率。
+class MyViewHolder extends RecyclerView.ViewHolder{
+TextView textView;
+public MyViewHolder(View itemView) {
+    super(itemView);
+    textView = (TextView)itemView.findViewById(R.id.Item_text);
+}
+}
+</code></pre><h4 id="说明："><a href="#说明：" class="headerlink" title="说明："></a>说明：</h4><pre><code>notifyItemInserted(pos);//增加item  
+notifyItemRemoved(pos);//删除item
+</code></pre>
+		  	  
+	</div>
+
+	<div class="article-bottom">
+		<a class="article-readmore" href="/2018/05/11/RecyclerView-的实现/">Continue</a> 	</div>	
+    
+</article>     
+     	
+      	  	
+
+  		
+    	<article class="article">		
+	   
+	<div class="article-header">
+	    
+	     <a class="article-title" href="/2018/05/11/hello-world/">Hello World</a>  
+	       
+		 
+
+		<div class="article-meta">
+		
+		May 11, 2018
+
+		
+		</div>
+
+	</div>
+
+
+	
+
+    
+	<div class="article-excerpt">	
+		 
+			<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+		  	  
+	</div>
+
+	<div class="article-bottom">
+		<a class="article-readmore" href="/2018/05/11/hello-world/">Continue</a> 	</div>	
     
 </article>     
      	
@@ -146,7 +555,7 @@
 
 
             <div class="search-header">
-            <input type="text" placeholder="输入你想搜索的" id="search-input" class="search-input">  
+            <input type="text" placeholder="Typing Something here." id="search-input" class="search-input">  
             <span class="search-cancel iconfont icon-cancel"></span>
           
             </div>
@@ -165,31 +574,31 @@
          
             
 
-            <a class="mobile-menu-link" href="/">首页
+            <a class="mobile-menu-link" href="/">Home
             </a>
             
          
             
 
-            <a class="mobile-menu-link" href="/archives">归档
+            <a class="mobile-menu-link" href="/archives">Archives
             </a>
             
          
             
 
-            <a class="mobile-menu-link" href="/tags">标签
+            <a class="mobile-menu-link" href="/tags">Tags
             </a>
             
          
             
 
-            <a class="mobile-menu-link" href="/about">关于
+            <a class="mobile-menu-link" href="/about">About
             </a>
             
          
                           
 
-            <a class="mobile-menu-link mobile-menu-search" href="#">搜索 </a>                 
+            <a class="mobile-menu-link mobile-menu-search" href="#">Search </a>                 
             
          
       
