@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Cyj&#39;s Blog</title>
   
-  <subtitle>Hello,world.</subtitle>
+  
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
